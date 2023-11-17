@@ -6,6 +6,7 @@ const User = require('./models/User');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Message = require('./models/Message');
 const ws = require('ws');
 
 dotenv.config();
@@ -96,13 +97,18 @@ wss.on('connection', (connection, req) => {
      }
    }
 
-   connection.on('message', (message) => {
+   connection.on('message', async (message) => {
     const messageData = JSON.parse(message.toString());
     const {recipient, text} = messageData;
     if (recipient && text) {
+       const messageDoc = await Message.create({
+            sender:connection.userId,
+            recipient,
+            text,
+        });
         [...wss.clients]
         .filter(c => c.userId === recipient)
-        .forEach(c => c.send(JSON.stringify({text})));
+        .forEach(c => c.send(JSON.stringify({text,sender:connection.UserId,id:messageDoc._id,})));
     }
    });
 

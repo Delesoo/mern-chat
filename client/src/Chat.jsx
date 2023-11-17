@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import Avatar from "./Avatar";
 import Logo from "./Logo";
 import {UserContext} from './UserContext.jsx'
+import {uniqBy} from 'lodash';
 
 export default function Chat() {
     const [ws,setWs] = useState(null);
@@ -9,6 +10,7 @@ export default function Chat() {
     const [selectedUserId,setSelectedUserId] = useState(null);
     const [newMessageText, setNewMessageText] = useState('');
     const {username,id} = useContext(UserContext);
+    const [messages,setMesssages] = useState([]);
     useEffect(() => {
        const ws = new WebSocket('ws://localhost:4040');
        setWs(ws);
@@ -23,8 +25,11 @@ export default function Chat() {
     }
     function handleMessage(ev) {
         const messageData = JSON.parse(ev.data);
+        console.log({ev,messageData});
         if ('online' in messageData) {
             showOnlinePeople(messageData.online);
+        } else if('text' in messageData) {
+            setMesssages(prev => ([...prev, {isOur:false,text:messageData.text}]));
         }
     }
     function sendMessage(ev) {
@@ -33,10 +38,14 @@ export default function Chat() {
                 recipient: selectedUserId,
                 text: newMessageText,
         }));
+        setNewMessageText('');
+        setMesssages(prev => ([...prev,{text: newMessageText, isOur:true}]));
     }
 
     const onlinePeopleExclOurUser = {...onlinePeople};
     delete onlinePeopleExclOurUser[id]
+
+    const messagesWithoutDupes = uniqBy(messages, 'id');
 
     return (
         <div className="flex h-screen">
@@ -60,6 +69,13 @@ export default function Chat() {
                     {!selectedUserId && (
                     <div className="flex h-full flex-grow items-center justify-center">
                         <div className="text-gray-400">&larr; Select a person</div>
+                    </div>
+                )}
+                {!!selectedUserId && (
+                    <div>
+                        {messagesWithoutDupes.map(message => (
+                            <div>{message.text}</div>
+                        ))}
                     </div>
                 )}
                 </div>
