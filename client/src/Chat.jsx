@@ -29,7 +29,7 @@ export default function Chat() {
         if ('online' in messageData) {
             showOnlinePeople(messageData.online);
         } else if('text' in messageData) {
-            setMesssages(prev => ([...prev, {isOur:false,text:messageData.text}]));
+            setMesssages(prev => ([...prev, {...messageData}]));
         }
     }
     function sendMessage(ev) {
@@ -39,7 +39,12 @@ export default function Chat() {
                 text: newMessageText,
         }));
         setNewMessageText('');
-        setMesssages(prev => ([...prev,{text: newMessageText, isOur:true}]));
+        setMesssages(prev => ([...prev,{
+            text: newMessageText, 
+            sender: id,
+            recipient: selectedUserId,
+            id: Date.now(),
+        }]));
     }
 
     const onlinePeopleExclOurUser = {...onlinePeople};
@@ -72,9 +77,15 @@ export default function Chat() {
                     </div>
                 )}
                 {!!selectedUserId && (
-                    <div>
+                    <div className="overflow-y-scroll">
                         {messagesWithoutDupes.map(message => (
-                            <div>{message.text}</div>
+                            <div className={(message.sender === id ? 'text-right' : 'text-left')}>                         
+                                <div className={"text-left inline-block p-2 my-2 rounded-md text-sm " +(message.sender === id ? 'bg-green-500 text-black' :    'bg-blue-500 text-white')}>
+                                    sender:{message.sender}<br />
+                                    my id: {id}<br />
+                                    {message.text}
+                                </div>
+                            </div>
                         ))}
                     </div>
                 )}
