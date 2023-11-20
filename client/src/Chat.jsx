@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Avatar from "./Avatar";
 import Logo from "./Logo";
 import {UserContext} from './UserContext.jsx'
@@ -11,6 +11,7 @@ export default function Chat() {
     const [newMessageText, setNewMessageText] = useState('');
     const {username,id} = useContext(UserContext);
     const [messages,setMesssages] = useState([]);
+    const divUnderMessages = useRef();
     useEffect(() => {
        const ws = new WebSocket('ws://localhost:4040');
        setWs(ws);
@@ -47,6 +48,13 @@ export default function Chat() {
         }]));
     }
 
+    useEffect(() => {             
+        const div = divUnderMessages.current;
+        if (div) {
+            div.scrollIntoView({behavior:'smooth', block:'end'});  
+        }
+    }, [messages]);
+
     const onlinePeopleExclOurUser = {...onlinePeople};
     delete onlinePeopleExclOurUser[id]
 
@@ -77,16 +85,19 @@ export default function Chat() {
                     </div>
                 )}
                 {!!selectedUserId && (
-                    <div className="overflow-y-scroll">
-                        {messagesWithoutDupes.map(message => (
-                            <div className={(message.sender === id ? 'text-right' : 'text-left')}>                         
-                                <div className={"text-left inline-block p-2 my-2 rounded-md text-sm " +(message.sender === id ? 'bg-green-500 text-black' :    'bg-blue-500 text-white')}>
-                                    sender:{message.sender}<br />
-                                    my id: {id}<br />
-                                    {message.text}
+                        <div className="relative h-full">
+                            <div className="overflow-y-scroll absolute top-0 left-0 right-0 bottom-2">
+                            {messagesWithoutDupes.map(message => (
+                                <div className={(message.sender === id ? 'text-right' : 'text-left')}>                         
+                                    <div className={"text-left inline-block p-2 my-2 rounded-md text-sm " +(message.sender === id ?     'bg-green-500 text-black' :    'bg-blue-500 text-white')}>
+                                        sender:{message.sender}<br />
+                                        my id: {id}<br />
+                                        {message.text}
+                                    </div>
                                 </div>
+                            ))}
+                            <div ref={divUnderMessages}></div>
                             </div>
-                        ))}
                     </div>
                 )}
                 </div>
