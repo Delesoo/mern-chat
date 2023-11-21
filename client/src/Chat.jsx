@@ -14,10 +14,19 @@ export default function Chat() {
     const [messages,setMesssages] = useState([]);
     const divUnderMessages = useRef();
     useEffect(() => {
-       const ws = new WebSocket('ws://localhost:4040');
-       setWs(ws);
-       ws.addEventListener('message', handleMessage)
+        connectToWs();
     }, []);
+    function connectToWs() {
+        const ws = new WebSocket('ws://localhost:4040');
+        setWs(ws);
+        ws.addEventListener('message', handleMessage);
+        ws.addEventListener('close', () => {
+            setTimeout(() => {
+                console.log('Disconnected. Trying to reconnect...');
+                connectToWs();
+            }, 1000);
+        });
+    }
     function showOnlinePeople(peopleArray) {
         const people = {};
         peopleArray.forEach(({userId,username}) => {
